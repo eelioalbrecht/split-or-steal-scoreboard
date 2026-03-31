@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel</title>
+
+<style>
+body{background:#121212;color:white;font-family:Arial;text-align:center}
+table{width:95%;margin:auto;border-collapse:collapse}
+th,td{border:1px solid #444;padding:8px}
+button{margin:2px;padding:5px}
+input{width:60px}
+.eliminated{opacity:0.4}
+</style>
+
+</head>
+<body>
+<div style="position:absolute; top:20px; right:20px;">
+  <button onclick="resetAll()" style="background:red; color:white; padding:10px 15px; border:none; cursor:pointer;">
+    RESET
+  </button>
+</div>
+<h1>ADMIN PANEL</h1>
+<h2 id="round"></h2>
+<button onclick="changeRound()">Next Round</button>
+
+<table>
+<thead>
+<tr>
+<th>Rank</th><th>Team</th><th>Members</th><th>Score</th><th>Controls</th><th>Eliminate</th>
+</tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<script type="module">
+window.resetAll = async () => {
+
+  let confirmReset = confirm("Are you sure you want to RESET all scores?");
+  if(!confirmReset) return;
+
+  let teams = globalData.teams.map(t => ({
+    ...t,
+    score: 0,
+    eliminated: false
+  }));
+
+  await updateDoc(ref, {
+    teams: teams,
+    round: "Round 1"
+  });
+
+};
+// 🔐 PASSWORD
+if(prompt("Enter Password") !== "01042026AIKYA"){
+  document.body.innerHTML="Access Denied";
+}
+
+// 🔥 FIREBASE
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAIVyQVRb0jUakO5L9xtTuttnkZ60tHG9c",
+  authDomain: "split-or-steal-c71b4.firebaseapp.com",
+  projectId: "split-or-steal-c71b4",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const ref = doc(db,"game","state");
+
+let globalData;
+
+onSnapshot(ref,(snap)=>{
+  globalData = snap.data();
+  render();
+});
+
+function render(){
+  let teams = [...globalData.teams];
+  teams.sort((a,b)=>b.score-a.score);
+
+  document.getElementById("round").innerText = globalData.round;
+
+  let html="";
+  teams.forEach((t,i)=>{
+    html+=`
+    <tr class="${t.eliminated?'eliminated':''}">
+      <td>${i+1}</td>
+      <td>${t.teamNumber}</td>
+      <td contenteditable onblur="editName(${t.teamNumber},this.innerText)">
+        ${t.members}
+      </td>
+      <td>${t.score}</td>
+      <td>
+        <button onclick="add(${t.teamNumber},100)">+100</button>
+        <button onclick="add(${t.teamNumber},250)">+250</button>
+        <button onclick="add(${t.teamNumber},500)">+500</button>
+        <button onclick="add(${t.teamNumber},750)">+750</button>
+        <button onclick="add(${t.teamNumber},1000)">+1000</button>
+        <br>
+        <input id="i${t.teamNumber}">
+        <button onclick="custom(${t.teamNumber})">Apply</button>
+      </td>
+      <td>
+        <button onclick="eliminate(${t.teamNumber})">X</button>
+      </td>
+    </tr>`;
+  });
+
+  document.getElementById("tbody").innerHTML=html;
+}
+
+// 🔧 ACTIONS
+window.add = async (num,val)=>{
+  update(num,val);
+};
+
+window.custom = async (num)=>{
+  let v = parseInt(document.getElementById("i"+num).value);
+  if(!v) return;
+  update(num,v);
+};
+
+async function update(num,val){
+  let teams = globalData.teams.map(t=>{
+    if(t.teamNumber===num && !t.eliminated){
+      t.score += val;
+    }
+    return t;
+  });
+  await updateDoc(ref,{teams});
+}
+
+window.eliminate = async (num)=>{
+  let teams = globalData.teams.map(t=>{
+    if(t.teamNumber===num){
+      t.eliminated = true;
+    }
+    return t;
+  });
+  await updateDoc(ref,{teams});
+};
+
+window.editName = async (num,name)=>{
+  let teams = globalData.teams.map(t=>{
+    if(t.teamNumber===num){
+      t.members = name;
+    }
+    return t;
+  });
+  await updateDoc(ref,{teams});
+};
+
+window.changeRound = async ()=>{
+  let r = parseInt(globalData.round.split(" ")[1]) || 1;
+  r++;
+  await updateDoc(ref,{round:`Round ${r}`});
+};
+
+</script>
+</body>
+</html>
