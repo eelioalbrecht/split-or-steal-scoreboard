@@ -2,8 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Scoreboard</title>
-
+<title>SPLIT & STEAL Scoreboard</title>
 <style>
 body{background:#121212;color:white;font-family:Arial;text-align:center}
 table{width:80%;margin:auto;border-collapse:collapse}
@@ -19,13 +18,10 @@ th,td{border:1px solid #444;padding:10px}
 
 .eliminated{opacity:0.4}
 </style>
-
 </head>
 <body>
-
-<h1>LIVE SCOREBOARD</h1>
+<h1>SPLIT & STEAL SCOREBOARD</h1>
 <h2 id="round"></h2>
-
 <table>
 <thead>
 <tr>
@@ -34,47 +30,35 @@ th,td{border:1px solid #444;padding:10px}
 </thead>
 <tbody id="tbody"></tbody>
 </table>
-
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAIVyQVRb0jUakO5L9xtTuttnkZ60tHG9c",
   authDomain: "split-or-steal-c71b4.firebaseapp.com",
   projectId: "split-or-steal-c71b4",
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const ref = doc(db,"game","state");
-
 let prevRanks = {};
-
 onSnapshot(ref,(snap)=>{
   let data = snap.data();
   render(data);
 });
-
 function render(data){
   let teams = [...data.teams];
   teams.sort((a,b)=>b.score-a.score);
-
   document.getElementById("round").innerText = data.round;
-
   let html="";
   teams.forEach((t,i)=>{
     let rank = i+1;
     let cls="";
-
     if(prevRanks[t.teamNumber]){
       if(rank < prevRanks[t.teamNumber]) cls="up";
       else if(rank > prevRanks[t.teamNumber]) cls="down";
     }
-
     prevRanks[t.teamNumber] = rank;
-
     html+=`
     <tr class="${cls} ${t.eliminated?'eliminated':''}">
       <td>${rank}</td>
@@ -83,10 +67,8 @@ function render(data){
       <td class="pop">${t.score}</td>
     </tr>`;
   });
-
   document.getElementById("tbody").innerHTML=html;
 }
-
 </script>
 </body>
 </html>
