@@ -2,8 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Panel</title>
-
+<title>AIKYA Panel</title>
 <style>
 body{background:#121212;color:white;font-family:Arial;text-align:center}
 table{width:95%;margin:auto;border-collapse:collapse}
@@ -12,7 +11,6 @@ button{margin:2px;padding:5px}
 input{width:60px}
 .eliminated{opacity:0.4}
 </style>
-
 </head>
 <body>
 <div style="position:absolute; top:20px; right:20px;">
@@ -20,10 +18,9 @@ input{width:60px}
     RESET
   </button>
 </div>
-<h1>ADMIN PANEL</h1>
+<h1>AIKYA PANEL</h1>
 <h2 id="round"></h2>
 <button onclick="changeRound()">Next Round</button>
-
 <table>
 <thead>
 <tr>
@@ -32,57 +29,42 @@ input{width:60px}
 </thead>
 <tbody id="tbody"></tbody>
 </table>
-
 <script type="module">
 window.resetAll = async () => {
-
   let confirmReset = confirm("Are you sure you want to RESET all scores?");
   if(!confirmReset) return;
-
   let teams = globalData.teams.map(t => ({
     ...t,
     score: 0,
     eliminated: false
   }));
-
   await updateDoc(ref, {
     teams: teams,
     round: "Round 1"
   });
-
 };
-// 🔐 PASSWORD
 if(prompt("Enter Password") !== "01042026AIKYA"){
   document.body.innerHTML="Access Denied";
 }
-
-// 🔥 FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
 const firebaseConfig = {
   apiKey: "AIzaSyAIVyQVRb0jUakO5L9xtTuttnkZ60tHG9c",
   authDomain: "split-or-steal-c71b4.firebaseapp.com",
   projectId: "split-or-steal-c71b4",
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const ref = doc(db,"game","state");
-
 let globalData;
-
 onSnapshot(ref,(snap)=>{
   globalData = snap.data();
   render();
 });
-
 function render(){
   let teams = [...globalData.teams];
   teams.sort((a,b)=>b.score-a.score);
-
   document.getElementById("round").innerText = globalData.round;
-
   let html="";
   teams.forEach((t,i)=>{
     html+=`
@@ -108,21 +90,16 @@ function render(){
       </td>
     </tr>`;
   });
-
   document.getElementById("tbody").innerHTML=html;
 }
-
-// 🔧 ACTIONS
 window.add = async (num,val)=>{
   update(num,val);
 };
-
 window.custom = async (num)=>{
   let v = parseInt(document.getElementById("i"+num).value);
   if(!v) return;
   update(num,v);
 };
-
 async function update(num,val){
   let teams = globalData.teams.map(t=>{
     if(t.teamNumber===num && !t.eliminated){
@@ -132,7 +109,6 @@ async function update(num,val){
   });
   await updateDoc(ref,{teams});
 }
-
 window.eliminate = async (num)=>{
   let teams = globalData.teams.map(t=>{
     if(t.teamNumber===num){
@@ -142,7 +118,6 @@ window.eliminate = async (num)=>{
   });
   await updateDoc(ref,{teams});
 };
-
 window.editName = async (num,name)=>{
   let teams = globalData.teams.map(t=>{
     if(t.teamNumber===num){
@@ -152,13 +127,11 @@ window.editName = async (num,name)=>{
   });
   await updateDoc(ref,{teams});
 };
-
 window.changeRound = async ()=>{
   let r = parseInt(globalData.round.split(" ")[1]) || 1;
   r++;
   await updateDoc(ref,{round:`Round ${r}`});
 };
-
 </script>
 </body>
 </html>
